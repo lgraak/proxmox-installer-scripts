@@ -12,14 +12,14 @@ function build_complete() {
   whiptail --title "Success" --msgbox "🎉 Build Complete! Your new container or VM has been created successfully." 10 60
 }
 
-# Dynamic Storage Selection (Proxmox 8+ Safe)
+# Dynamic Storage Selection (Proxmox 8+ Safe with awk)
 function select_storage() {
   STORAGE_OPTIONS=()
   while read -r STORAGE TYPE STATUS; do
     if [[ "$STATUS" == "active" && ("$TYPE" == "dir" || "$TYPE" == "lvmthin" || "$TYPE" == "zfspool" || "$TYPE" == "rbd") ]]; then
       STORAGE_OPTIONS+=("$STORAGE" "")
     fi
-  done < <(pvesm status)
+  done < <(pvesm status | awk '{print $1, $2, $3}')
 
   STORAGE=$(whiptail --title "Select Storage" --menu "Choose storage for VM/Container disks" 20 60 10 "${STORAGE_OPTIONS[@]}" 3>&1 1>&2 2>&3) || exit 1
 }
