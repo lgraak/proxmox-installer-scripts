@@ -12,19 +12,18 @@ function build_complete() {
   whiptail --title "Success" --msgbox "🎉 Build Complete! Your new container or VM has been created successfully." 10 60
 }
 
-# Dynamic Storage Selection (only usable storage)
+# Dynamic Storage Selection (Proxmox 8+ Safe)
 function select_storage() {
   STORAGE_OPTIONS=()
-  while read -r line; do
-    STORAGE=$(echo $line | awk '{print $1}')
-    CONTENT=$(echo $line | awk '{print $3}')
-    if [[ "$CONTENT" == *"images"* ]]; then
+  while read -r STORAGE TYPE STATUS; do
+    if [[ "$STATUS" == "active" && ("$TYPE" == "dir" || "$TYPE" == "lvmthin" || "$TYPE" == "zfspool" || "$TYPE" == "rbd") ]]; then
       STORAGE_OPTIONS+=("$STORAGE" "")
     fi
   done < <(pvesm status)
 
   STORAGE=$(whiptail --title "Select Storage" --menu "Choose storage for VM/Container disks" 20 60 10 "${STORAGE_OPTIONS[@]}" 3>&1 1>&2 2>&3) || exit 1
 }
+
 # Select VM or LXC
 function select_type() {
   TYPE=$(whiptail --title "Select Type" --menu "Container or VM?" 10 60 2 \
@@ -62,6 +61,7 @@ function select_version() {
     CLOUD_IMAGE="debian-${VERSION}-genericcloud-amd64.qcow2"
   fi
 }
+
 # Prompt for general VM/Container settings
 function general_settings() {
   NODE=$(whiptail --inputbox "Enter Node Name (as seen in Proxmox GUI)" 10 60 "$(hostname)" 3>&1 1>&2 2>&3) || exit 1
@@ -87,6 +87,7 @@ function network_settings() {
     DNS=$(whiptail --inputbox "Enter DNS Server(s) (comma-separated)" 10 60 "1.1.1.1,8.8.8.8" 3>&1 1>&2 2>&3) || exit 1
   fi
 }
+
 # Prompt for optional sudo user
 function sudo_user_settings() {
   CREATE_SUDO=$(whiptail --yesno "Do you want to create an additional sudo user?" 10 60 3>&1 1>&2 2>&3) || CREATE_SUDO=false
@@ -99,14 +100,12 @@ function sudo_user_settings() {
 
 # Create LXC
 function create_lxc() {
-  # Find the right template
   TEMPLATE_FILE=$(pveam available -section system | grep "$TEMPLATE" | awk '{print $2}' | sort -r | head -n1)
   if [ -z "$TEMPLATE_FILE" ]; then
     whiptail --title "Error" --msgbox "Could not find template matching $TEMPLATE" 10 60
     exit 1
   fi
 
-  # Download template if missing
   if ! pveam list local | grep -q "$TEMPLATE_FILE"; then
     pveam download local "$TEMPLATE_FILE"
   fi
@@ -133,12 +132,11 @@ function create_lxc() {
 
   pct start "$ID"
 }
+
 # Create VM
 function create_vm() {
-  # Ensure the cloud image folder exists
   mkdir -p /mnt/pve/proxmox-templates/template/qcow2/
 
-  # Check and download the cloud image if missing
   IMG_FILE="/mnt/pve/proxmox-templates/template/qcow2/$CLOUD_IMAGE"
   if [ ! -f "$IMG_FILE" ]; then
     echo "Downloading cloud image for $OS $VERSION..."
