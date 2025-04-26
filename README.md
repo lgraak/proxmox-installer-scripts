@@ -1,18 +1,13 @@
-# Proxmox Installer Scripts
+# Proxmox Installer Scripts (v2)
 
-A simple interactive script to deploy Ubuntu or Debian LXC containers and VMs on Proxmox VE.
-- Choose LXC or VM
-- Choose Ubuntu or Debian
-- Select OS version
-- Configure CPU, RAM, disk, storage
-- Set static IP or DHCP
-- Setup root user and optional sudo user with SSH key
+A professional Proxmox LXC/VM builder with:
+- Ubuntu and Debian support (18.04/20.04/22.04/24.04, Debian 10/11/12)
+- Dynamic storage picker
+- Static or DHCP networking
+- SSH key injection for root and optional sudo user
+- Auto-download cloud images to `/mnt/pve/proxmox-templates/template/qcow2/`
 
 ## Usage
-
-1. SSH into your Proxmox node.
-2. Upload the script or clone this repository.
-3. Run:
 
 ```bash
 chmod +x proxmox-installer.sh
@@ -20,7 +15,5 @@ chmod +x proxmox-installer.sh
 ```
 
 ## Requirements
-
-- Proxmox VE 7.x or 8.x
-- SSH public key ready for injection
-- Cloud-Init for VM creation
+- `/mnt/pve/proxmox-templates` must exist and be mounted
+- Node must have internet access initially for image downloads

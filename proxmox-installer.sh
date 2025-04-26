@@ -1,5 +1,5 @@
 #!/bin/bash
-# proxmox-installer.sh
-# Custom script to create Ubuntu/Debian LXC containers or VMs on Proxmox with user-selected options.
+# proxmox-installer.sh (Version 2)
+# Proxmox LXC/VM auto-installer script with dynamic storage picking, cloud-init images, static/DHCP network setup.
 
-# (Script contents will be filled here later...)
+echo "Placeholder script. Full working script to be inserted."
